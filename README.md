@@ -1,11 +1,12 @@
 # clouding
 
+解压压缩包
+
 python 版本3.11
 
 创建虚拟python环境
 
 安装 requirements.txt 内依赖包
-
 
 修改 config 中 DATABASES 部分
 
