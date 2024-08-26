@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+<!-- {% load url_utils %} -->
+{% load url_utils %}
+{% block content %}
+<div class="right">
+    <div class="top">
+        <div class="tool">
+            <div class="class-info">
+                <form method="get" action="{% url 'teachers_list' %}">
+                    <span>班级:</span>
+                    <select name="grade">
+                        <option value="" selected>请选择班级</option>
+                        {% for grade in grades %}
+                            <option value="{{ grade.pk }}" {% if grade.pk|stringformat:"s" == current_grade %}selected{% endif %}>
+                                {{ grade.grade_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <span>姓名/电话:</span>
+                    <input type="text" name="search">
+                    <input type="submit" value="搜索">
+                    <a href="javascript:;">
+                        <button type="button" class="add" id="add">新增</button>
+                    </a>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <table>
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select-all"></th>
+                    <th>班级</th>
+                    <th>姓名</th>
+                    <th>性别</th>
+                    <th>手机号</th>
+                    <th>生日</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for teacher in teachers %}
+                <tr>
+                    <td><input type="checkbox" name="teacher_ids" value="{{ teacher.id }}"></td>
+                    <td>{{ teacher.grade.grade_name }}</td>
+                    <td>{{ teacher.teacher_name }}</td>
+                    <td>{{ teacher.get_gender_display }}</td>
+                    <td>{{ teacher.phone_number }}</td>
+                    <td>{{ teacher.birthday|date:"Y-m-d" }}</td>
+                    <td>
+                        <a href="{% url 'teacher_update' teacher.pk %}" class="btn btn-primary btn-sm edit">编辑</a>
+                        <a href="{% url 'teacher_delete' teacher.pk %}" class="btn btn-danger btn-sm del">删除</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9">暂无学生信息</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="pagination">
+            <div>
+                <div>
+                    <!-- <span>页码： {{ page_obj.paginator.num_pages  }}</span> -->
+                    <span>第{{ page_obj.number }}页/共{{ page_obj.paginator.num_pages }}页</span>
+                    {% if page_obj.has_previous %}
+                        <a href="?{% search_url request page=1 %}">首页</a>
+                        <a href="?{% search_url request page=page_obj.previous_page_number %}">上一页</a>
+                    {% endif %}
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?{% search_url request page=page_obj.next_page_number %}">下一页</a>
+                        <a href="?{% search_url request page=page_obj.paginator.num_pages %}">尾页</a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    // 将CSRF token存储为全局JavaScript变量
+    var csrftoken = '{{ csrf_token }}';
+</script>
+
+<script>
+    // 新增学生
+    document.getElementById('add').addEventListener('click', function() {
+        showIframe("{% url 'teacher_create' %}");  // URL for adding a student
+    });
+
+    // 编辑学生
+    document.querySelectorAll('.edit').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();  // 阻止链接默认跳转行为
+            var url = this.getAttribute('href');  // 获取当前点击的按钮中的 URL
+            showIframe(url);  // 调用 showIframe 并传递 URL
+        });
+    });
+
+    // 删除学生
+    document.querySelectorAll('.del').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault(); // 阻止链接默认跳转行为
+            var url = this.getAttribute('href'); 
+            Swal.fire({
+                title: "确认删除?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "删除",
+                confirmButtonColor: "#d33",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // 发送 AJAX 请求到服务器以删除学生
+                    fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': csrftoken,  // 获取 CSRF token，确保已经在模板中使用 {% csrf_token %}
+                            'Content-Type': 'application/json'
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data)
+                        if(data.status === 'success') {
+                            Swal.fire("Deleted!", data.messages, "success");
+                            // 可以添加页面跳转或重新加载等
+                            window.location.reload();
+                        } else {
+                            Swal.fire("Error!", data.messages, "error");
+                        }
+                    })
+                    .catch(error => console.log('Error:', error));
+                }
+            });
+        })
+    })
+
+
+   
+    // 全选
+    document.addEventListener('DOMContentLoaded', function () {
+        // 获取全选复选框元素
+        const selectAllCheckbox = document.getElementById('select-all');
+        
+        // 监听全选复选框的点击事件
+        selectAllCheckbox.addEventListener('change', function () {
+            // 获取所有 name 为 'student_ids' 的复选框
+            const teacherCheckboxes = document.querySelectorAll('input[name="teacher_ids"]');
+            
+            // 根据全选复选框的选中状态设置每个学生复选框的状态
+            teacherCheckboxes.forEach(function(checkbox) {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        });
+    });
+
+
+    function showIframe(url){
+        Swal.fire({
+            position: "top-end",
+            html: `<iframe src="${url}" width="100%" height="800px" frameborder="0"></iframe>`,
+            width: 600,
+            showConfirmButton: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire("Saved!", "", "success");
+            } else if (result.isDenied) {
+                Swal.fire("Changes are not saved", "", "info");
+            }
+        });
+    }
+
+
+    // 关闭页面的弹窗
+    function closeIframePopup() {
+        Swal.close();
+    }
+
+</script>
+
+
+{% endblock %}
+
