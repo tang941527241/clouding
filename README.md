@@ -16,6 +16,8 @@ python 版本3.11
 python manage.py makemigrations
 python manage.py migrate
 
+在对应数据库执行 student_management.sql 内文件
+
 执行下面命令开启django服务
 python manage.py runserver
 
