@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load url_utils %}
+
+{% block content %}
+    <div class="right">
+        <div class="top">
+            <div class="tool">
+                <div class="class-info">
+                    <form method="get" action="/plan_dicts/">
+                        <span>字典类型/典名称:</span>
+                        <label>
+                            <input type="text" name="search_type" placeholder="搜索字典类型" value="">
+                        </label>
+                        <label>
+                            <input type="text" name="search_name" placeholder="搜索字典名称" value="">
+                        </label>
+                        <input type="submit" value="搜索">
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="bottom">
+            <table>
+                <thead>
+                <tr>
+                    <th>字典类型</th>
+                    <th>字典编号</th>
+                    <th>字典名称</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for plan_dict in plan_dicts %}
+                    <tr>
+                        <td>{{ plan_dict.type }}</td>
+                        <td>{{ plan_dict.code }}</td>
+                        <td>{{ plan_dict.name }}</td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+            </table>
+
+            <!-- 分页导航 -->
+            <div class="pagination">
+                  <span class="step-links">
+                      <span class="step-links">
+                        {% if page_obj.has_previous %}
+                            <a href="?{% search_url request page=1 %}">&laquo; 首页</a>
+                            <a href="?{% search_url request page=page_obj.previous_page_number %} ">上一页</a>
+                        {% endif %}
+
+                          <span class="current">
+                             {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                        </span>
+
+                          {% if page_obj.has_next %}
+                              <a href="?{% search_url request page=page_obj.next_page_number %}">下一页</a>
+                              <a href="?{% search_url request page=page_obj.paginator.num_pages %}">尾页 &raquo;</a>
+                          {% endif %}
+                    </span>
+                  </span>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

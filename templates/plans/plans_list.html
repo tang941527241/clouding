@@ -1,0 +1,155 @@
+    {% extends 'base.html' %}
+
+{% load url_utils %}
+
+{% block content %}
+    <div class="right">
+        <div class="top">
+            <div class="tool">
+                <div class="class-info">
+                    <form method="get" action="/plans/">
+                        <span>计划名称: </span>
+                        <label>
+                            <input type="text" name="search_plan_name" placeholder="请输入计划名称"
+                                   value="{{ request.GET.search_plan_name }}">
+                        </label>
+                        <span>项目年度: </span>
+                        <label>
+                            <input type="number" name="search_year" placeholder="请输入年度"
+                                   value="{{ request.GET.search_year }}" min="2000"
+                                   max="2100" step="1">
+                        </label>
+                        <span>项目类型: </span>
+                        <label>
+                            <select name="search_project_type">
+                                <option value="">请选择项目类型</option>
+                                {% for code, name in project_type_choices %}
+                                    <option value="{{ code }}"
+                                            {% if request.GET.search_project_type == code %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <span>计划状态: </span>
+                        <label>
+                            <select name="search_plan_status">
+                                <option value="">请选择计划状态</option>
+                                {% for code, name in plan_status_choices %}
+                                    <option value="{{ code }}"
+                                            {% if request.GET.search_plan_status == code %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <br>
+                        <br>
+                        <span>组织单位: </span>
+                        <label>
+                            <select name="search_organizational_units">
+                                <option value="">请选择组织单位</option>
+                                {% for code, name in organizational_units_choices %}
+                                    <option value="{{ code }}"
+                                            {% if request.GET.search_organizational_units == code %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <span>审计类型: </span>
+                        <label>
+                            <select name="search_audit_type">
+                                <option value="">请选择审计类型</option>
+                                {% for code, name in audit_type_choices %}
+                                    <option value="{{ code }}"
+                                            {% if request.GET.search_audit_type == code %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <span>项目状态: </span>
+                        <label>
+                            <select name="search_project_status">
+                                <option value="">请选择项目状态</option>
+                                {% for code, name in project_status_choices %}
+                                    <option value="{{ code }}"
+                                            {% if request.GET.search_project_status == code %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <input type="submit" value="搜索">
+                        <button type="button"  class="reset_query" onclick="window.location.href='/plans/'">重置查询</button>
+                    </form>
+                </div>
+                <div class="actions">
+                    <button type="button" class="add" id="add">新增</button>
+                    <button type="button" class="del" id="del-all">批量删除</button>
+                </div>
+            </div>
+        </div>
+        <div class="bottom">
+            <table>
+                <thead>
+                <tr>
+                    <th><label for="select-all"></label><input type="checkbox" id="select-all"></th>
+                    <th>计划状态</th>
+                    <th>计划名称</th>
+                    <th>年度</th>
+                    <th>创建时间</th>
+                    <th>实施时间</th>
+                    <th>项目类型</th>
+                    <th>审计类型</th>
+                    <th>计划负责人</th>
+                    <th>组织单位</th>
+                    <th>实施单位</th>
+                    <th>审计对象</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for plan in plans %}
+                    <tr>
+                        <td><label>
+                            <input type="checkbox" name="plan_ids" value="{{ plan.pk }}">
+                        </label></td>
+                        <td>{{ plan.get_plan_status_name }}</td>
+                        <td>{{ plan.plan_name }}</td>
+                        <td>{{ plan.year|date:"Y" }}</td>
+                        <td>{{ plan.creation_time }}</td>
+                        <td>{{ plan.implementation_start_time }}至{{ plan.implementation_end_time }} </td>
+                        <td>{{ plan.get_project_type_name }} </td>
+                        <td>{{ plan.get_audit_type_name }} </td>
+                        <td>{{ plan.get_program_leader_name }}</td>
+                        <td>{{ plan.get_organizational_units_name }}</td>
+                        <td>{{ plan.get_implementing_units_name }}</td>
+                        <td>{{ plan.get_audited_objects_name }}</td>
+                        <td>
+                            <a href="{% url 'plan_update' plan.pk %}"
+                               class="btn btn-primary btn-sm edit">编辑</a>
+                            <a href="{% url 'plan_delete' plan.pk %}"
+                               class="btn btn-danger btn-sm del">删除</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- 分页导航 -->
+            <div class="pagination">
+                  <span class="step-links">
+                      <span class="step-links">
+                        {% if page_obj.has_previous %}
+                            <a href="?{% search_url request page=1 %}">&laquo; 首页</a>
+                            <a href="?{% search_url request page=page_obj.previous_page_number %} ">上一页</a>
+                        {% endif %}
+
+                          <span class="current">
+                             {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                        </span>
+
+                          {% if page_obj.has_next %}
+                              <a href="?{% search_url request page=page_obj.next_page_number %}">下一页</a>
+                              <a href="?{% search_url request page=page_obj.paginator.num_pages %}">尾页 &raquo;</a>
+                          {% endif %}
+                    </span>
+                  </span>
+            </div>
+        </div>
+
+    </div>
+    {% include 'plans/plans_list_script.html' %}
+{% endblock %}
